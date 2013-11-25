@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include "planet.h"
+#include "player.h"
 
 #ifdef __APPLE__
 #  include <GLUT/glut.h>
@@ -15,6 +17,9 @@
 
 using namespace std;
 
+Planet planets[10];
+Player noob;
+
 void draw()
 {
   //Draw the scene
@@ -24,6 +29,16 @@ void draw()
 
   //For each object
   //glBegin(), glEnd()
+  //glBegin();
+
+  for ( int i = 0; i < 10; i++ )
+  {
+    planets[i].draw();
+  }
+
+  noob.draw();
+
+  //glEnd();
 
   glutSwapBuffers(); //swap buffers: display the drawing.
 }
@@ -56,7 +71,12 @@ void specialInput( int key, int x, int y )
 
 void setup()
 {
+
   //Initialization logic.
+  for ( int i = 0; i < 10; i++ )
+  {
+    planets[i] = Planet( i * 3, 0.0, -5.0, 1.0, 100.0 ); //fill array with objects?
+  }
 }
 
 //Main routine
