@@ -17,6 +17,7 @@ class Player
 public:
   Player() { position = Point3(); }; //constructor
   Point3 position;
+  bool grounded;
   void draw();
 private:
 };

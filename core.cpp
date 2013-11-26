@@ -20,8 +20,33 @@ using namespace std;
 Planet planets[10];
 Player noob;
 
+void gameLogic()
+{
+  //handles game logic
+  noob.grounded = false;
+
+  for ( int i = 0; i < 10; i++ )
+  {
+    if ( sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ) ) < planets[i].radius )
+    {
+      noob.grounded = true;
+      //set pos to planet pos + r * a unit vector in the direction of the player.
+      //later, we'll also want to move the player with the planet.
+    }
+
+    //move the planets in their orbits.
+    //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
+    //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
+
+    //Do gravitation, acceleration, velocity, position!
+  }
+}
+
 void draw()
 {
+  //Do game logic
+  gameLogic();
+
   //Draw the scene
   glClear( GL_COLOR_BUFFER_BIT ); //clear the buffer
 
@@ -31,11 +56,15 @@ void draw()
   //glBegin(), glEnd()
   //glBegin();
 
+  //draw all the stars in the background
+
+  //draw the planets
   for ( int i = 0; i < 10; i++ )
   {
     planets[i].draw();
   }
 
+  //draw the player
   noob.draw();
 
   //glEnd();
@@ -61,6 +90,14 @@ void handleInput( unsigned char key, int x, int y )
   if ( key == 65 )
   {
     //TODO: A
+  }
+  if ( key == 32 )
+  {
+    //TODO: SPACE
+    if ( noob.grounded )
+    {
+      //jump
+    }
   }
 }
 
