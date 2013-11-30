@@ -1,7 +1,6 @@
 //Gabriel Violette + Geo Kersey
 //TODO: reference where you stole the code from (gupta loadtextures.cpp)
 //Core Game Code
-
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -51,7 +50,7 @@ void update( int ignore_me )
 void draw()
 {
   //Draw the scene
-  glClear( GL_COLOR_BUFFER_BIT ); //clear the buffer
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the buffers (need to clear both for shading to work right.)
 
   glLoadIdentity(); //reset orientation
 
@@ -111,6 +110,12 @@ void specialInput( int key, int x, int y )
 
 void setup()
 {
+  glEnable(GL_DEPTH_TEST); //enable depth testing
+  glEnable(GL_LIGHTING);   //enable lighting
+ 
+  //Enable face culling.
+  //glEnable(GL_CULL_FACE);
+  //glCullFace(GL_BACK);
 
   //Initialization logic.
   for ( int i = 0; i < 10; i++ )
