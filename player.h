@@ -19,5 +19,6 @@ public:
   Point3 position;
   bool grounded;
   void draw();
+  void set_position(float new_x, float new_y, float new_z);
 private:
 };

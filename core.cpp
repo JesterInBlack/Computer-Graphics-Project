@@ -18,6 +18,7 @@ using namespace std;
 
 Planet planets[10];
 Player noob;
+float distance_from_center;
 
 void update( int ignore_me )
 {
@@ -26,10 +27,35 @@ void update( int ignore_me )
 
   for ( int i = 0; i < 10; i++ )
   {
-    if ( sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ) ) < planets[i].radius )
+    distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ));
+    if ( distance_from_center ) < planets[i].radius )
     {
       noob.grounded = true;
       //set pos to planet pos + r * a unit vector in the direction of the player.
+      if (noob.position.x < planets[i].x)
+	  {
+		  noob.position.x = planets[i].x - (planets[i].x * planets[i].radius / distance_from_center);
+	  }
+	  else
+	  {
+		  noob.position.x = planets[i].x + (planets[i].x * planets[i].radius / distance_from_center);
+	  }
+	  if (noob.position.y < planets[i].y)
+	  {
+		  noob.position.y = planets[i].y - (planets[i].y * planets[i].radius / distance_from_center);
+	  }
+	  else
+	  {
+		  noob.position.y = planets[i].y + (planets[i].y * planets[i].radius / distance_from_center);
+	  }
+	  if (noob.position.z < planets[i].z)
+	  {
+		  noob.position.z = planets[i].z - (planets[i].z * planets[i].radius / distance_from_center);
+	  }
+	  else
+	  {
+		  noob.position.z = planets[i].z + (planets[i].z * planets[i].radius / distance_from_center);
+	  }
       //later, we'll also want to move the player with the planet.
     }
 
