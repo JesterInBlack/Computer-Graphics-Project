@@ -20,7 +20,7 @@ using namespace std;
 Planet planets[10];
 Player noob;
 
-void gameLogic()
+void update( int ignore_me )
 {
   //handles game logic
   noob.grounded = false;
@@ -38,15 +38,18 @@ void gameLogic()
     //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
     //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
 
+    planets[i].update();
+    //cout << i << planets[i].x << "\n"; //DEBUG
+
     //Do gravitation, acceleration, velocity, position!
   }
+
+  glutTimerFunc( 17, update, 0 );
+  glutPostRedisplay();
 }
 
 void draw()
 {
-  //Do game logic
-  gameLogic();
-
   //Draw the scene
   glClear( GL_COLOR_BUFFER_BIT ); //clear the buffer
 
@@ -79,7 +82,7 @@ void resize( int width, int height)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
 
-  glFrustum( -5.0, 5.0, -5.0, 5.0, 5.0, 100.0 );
+  glFrustum( -20.0, 20.0, -20.0, 20.0, 5.0, 100.0 );
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 }
@@ -113,6 +116,10 @@ void setup()
   for ( int i = 0; i < 10; i++ )
   {
     planets[i] = Planet( i * 3, 0.0, -5.0, 1.0, 100.0 ); //fill array with objects?
+    planets[i].orbit_r = i * 3;
+    planets[i].orbit_x = 0;
+    planets[i].orbit_y = 0;
+    planets[i].orbit_z = 0;
   }
 }
 
@@ -132,6 +139,7 @@ int main(int argc, char** argv)
   setup();
 
   //Setup callbacks
+  glutTimerFunc( 17, update, 0 );
   glutDisplayFunc(draw);
   glutReshapeFunc(resize);
   glutKeyboardFunc(handleInput);
