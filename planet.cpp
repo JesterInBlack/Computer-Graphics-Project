@@ -21,8 +21,8 @@ void Planet::draw()
   glEnable( GL_CULL_FACE );
   glCullFace( GL_FRONT );
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  //glMatrixMode(GL_MODELVIEW);
+  //glLoadIdentity();
   glTranslatef( Planet::x, Planet::y, Planet::z );
 
   //SHADING
@@ -55,7 +55,7 @@ void Planet::draw()
   glEnable( GL_LIGHT0 );
   glEnable( GL_LIGHTING );   //enable lighting
 
-  glutSolidSphere( Planet::radius, 100, 100 );
+  glutSolidSphere( Planet::radius, 25, 25 );
 
   glDisable( GL_LIGHT0 );    //turn off light 0
   glDisable( GL_LIGHTING );  //disable lighting

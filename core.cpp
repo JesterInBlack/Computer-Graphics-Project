@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <sstream>
+#include <string.h>
 #include "planet.h"
 #include "player.h"
 
@@ -85,10 +87,19 @@ void draw()
   //glBegin();
 
   //draw all the stars in the background
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef( 0.0, 20.0, -75 );
+  glutSolidSphere( 0.5, 8, 8 );
 
   //draw the planets
   for ( int i = 0; i < 10; i++ )
   {
+    //do camera offset
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef( 0.0, 0.0, 0.0 );
+    //draw planets
     planets[i].draw();
   }
 
@@ -134,6 +145,86 @@ void specialInput( int key, int x, int y )
   //handles non-ASCII key input. (use GLUT_KEY_w/e constants)
 }
 
+void readPlanetFromFile( Planet &temp_planet, string filename )
+{
+  //reads data from file into temp_planet.
+
+  ifstream my_file;
+  my_file.open( filename );
+
+  for ( string line; getline(my_file, line); ) //read the file line by line
+  {
+    istringstream in( line ); //create a stream for the line
+
+    //Figure out what kind of data we're going to be reading in.
+    string linetype;
+    in >> linetype;
+    cout << linetype << '\n';
+
+    if ( linetype == "RADIUS" )
+    {
+      in >> temp_planet.radius;
+    }
+    else if ( linetype == "MASS" )
+    {
+      in >> temp_planet.mass;
+    }
+    else if ( linetype == "ORBITCENTER" )
+    {
+      in >> temp_planet.orbit.x;
+      in >> temp_planet.orbit.y; 
+      in >> temp_planet.orbit.z;
+    }
+    else if ( linetype == "ORBITRADIUS" )
+    {
+      in >> temp_planet.orbit.r;
+    }
+    else if ( linetype == "THETA" )
+    {
+      in >> temp_planet.orbit.angle;
+    }
+    else if ( linetype == "OMEGA" )
+    {
+      in >> temp_planet.orbit.omega;
+    }
+    else if ( linetype == "AMBIENT" )
+    {
+      in >> temp_planet.ambient.r;
+      in >> temp_planet.ambient.g;
+      in >> temp_planet.ambient.b;
+      in >> temp_planet.ambient.a;
+    }
+    else if ( linetype == "DIFFUSE" )
+    {
+      in >> temp_planet.diffuse.r;
+      in >> temp_planet.diffuse.g;
+      in >> temp_planet.diffuse.b;
+      in >> temp_planet.diffuse.a;
+    }
+    else if ( linetype == "SPECULAR" )
+    {
+      in >> temp_planet.specular.r;
+      in >> temp_planet.specular.g;
+      in >> temp_planet.specular.b;
+      in >> temp_planet.specular.a;
+    }
+    else if ( linetype == "EMISSION" )
+    {
+      in >> temp_planet.emissive.r;
+      in >> temp_planet.emissive.g;
+      in >> temp_planet.emissive.b;
+      in >> temp_planet.emissive.a;
+    }
+    else if ( linetype == "SHININESS" )
+    {
+      in >> temp_planet.shininess;
+    }
+  }
+
+  my_file.close();
+}
+
+
 void setup()
 {
   glEnable(GL_DEPTH_TEST); //enable depth testing
@@ -148,6 +239,8 @@ void setup()
     planets[i].orbit.y = 0;
     planets[i].orbit.z = 0;
   }
+
+  readPlanetFromFile( planets[0], "planet0.txt" );
 }
 
 //Main routine
