@@ -28,7 +28,7 @@ void update( int ignore_me )
   for ( int i = 0; i < 10; i++ )
   {
     distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ));
-    if ( distance_from_center ) < planets[i].radius )
+    if ( distance_from_center < planets[i].radius )
     {
       noob.grounded = true;
       //set pos to planet pos + r * a unit vector in the direction of the player.
@@ -107,7 +107,7 @@ void resize( int width, int height)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
 
-  glFrustum( -20.0, 20.0, -20.0, 20.0, 5.0, 100.0 );
+  glFrustum( -16.0, 16.0, -10.0, 10.0, 5.7, 100.0 );
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 }
@@ -138,19 +138,15 @@ void setup()
 {
   glEnable(GL_DEPTH_TEST); //enable depth testing
   glEnable(GL_LIGHTING);   //enable lighting
- 
-  //Enable face culling.
-  //glEnable(GL_CULL_FACE);
-  //glCullFace(GL_BACK);
 
   //Initialization logic.
   for ( int i = 0; i < 10; i++ )
   {
     planets[i] = Planet( i * 3, 0.0, -5.0, 1.0, 100.0 ); //fill array with objects?
-    planets[i].orbit_r = i * 3;
-    planets[i].orbit_x = 0;
-    planets[i].orbit_y = 0;
-    planets[i].orbit_z = 0;
+    planets[i].orbit.r = i * 3;
+    planets[i].orbit.x = 0;
+    planets[i].orbit.y = 0;
+    planets[i].orbit.z = 0;
   }
 }
 
@@ -163,7 +159,7 @@ int main(int argc, char** argv)
 
   //Set up window
   glutInitWindowPosition( 0, 0 ); //set window's position
-  glutInitWindowSize( 500, 500 ); //set window's size
+  glutInitWindowSize( 1440, 900 ); //set window's size
   glutCreateWindow("Title!");
 
   //setup game stuff

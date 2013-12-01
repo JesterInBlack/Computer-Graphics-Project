@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <math.h>
 //#include "point3.h"
+#include "colour.h"
+#include "orbit.h"
 
 #ifdef __APPLE__
 #  include <GLUT/glut.h>
@@ -21,12 +23,12 @@ public:
     radius = 1.0; 
     mass = 100; 
     x = 0.0; y = 0.0; z = -1.0; 
-    orbit_x = 0.0; 
-    orbit_y = 0.0; 
-    orbit_z = -5.0; 
-    orbit_r = 5.0; 
-    orbit_angle = 0.0; 
-    orbit_omega = 0.0314;
+    orbit = Orbit( 0.0, 0.0, 0.0, 5.0, 0.0, 0.0314 );
+    ambient = Colour( 0.0, 0.0, 0.0, 1.0 );
+    diffuse = Colour( 0.5, 0.5, 1.0, 1.0 );
+    specular = Colour( 1.0, 1.0, 1.0, 1.0 );
+    emissive = Colour( 0.0, 0.0, 0.0, 1.0 );
+    shininess = 50;
   }; //constructor
 
   Planet( float p_x, float p_y, float p_z, float p_r, float p_mass ) 
@@ -34,21 +36,27 @@ public:
     x = p_x; y = p_y; z = p_z; 
     radius = p_r; 
     mass = p_mass; 
-    orbit_x = 0.0; 
-    orbit_y = 0.0; 
-    orbit_z = -5.0; 
-    orbit_r = 5.0; 
-    orbit_angle = 0.0; 
-    orbit_omega = 0.0314;
+    orbit = Orbit( 0.0, 0.0, 0.0, 5.0, 0.0, 0.0314 );
+    ambient = Colour( 0.0, 0.0, 0.0, 1.0 );
+    diffuse = Colour( 0.5, 0.5, 1.0, 1.0 );
+    specular = Colour( 1.0, 1.0, 1.0, 1.0 );
+    emissive = Colour( 0.0, 0.0, 0.0, 1.0 );
+    shininess = 50;
   };
   float mass; //in kg?
   float radius; //in "units"
-  float x, y, z;
+  float x, y, z; //center point: f( orbit )
   //Orbit
-  float orbit_x, orbit_y, orbit_z; //center point x, y, z
-  float orbit_r; //orbit radius
-  float orbit_angle, orbit_omega;  //orbit angular speed
-  //Point3 center;
+  Orbit orbit;
+  //Colors
+  Colour ambient;  //ambient color
+  Colour diffuse;  //diffuse color
+  Colour specular; //specular highlight color
+  Colour emissive; //emissive color
+  int shininess;   //0-128 shininess exponent for spectral lighting
+  //---------------------
+  //Function prototypes
+  //---------------------
   void draw();
   void update();
 private:

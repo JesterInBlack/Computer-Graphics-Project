@@ -4,9 +4,9 @@
 
 void Planet::update()
 {
-  Planet::orbit_angle += Planet::orbit_omega;
-  Planet::x = Planet::orbit_x + Planet::orbit_r * cos( Planet::orbit_angle );
-  Planet::y = Planet::orbit_y + Planet::orbit_r * sin( Planet::orbit_angle );
+  Planet::orbit.update();
+  Planet::x = Planet::orbit.x + Planet::orbit.r * cos( Planet::orbit.angle );
+  Planet::y = Planet::orbit.y + Planet::orbit.r * sin( Planet::orbit.angle );
 }
 
 void Planet::draw()
@@ -26,12 +26,20 @@ void Planet::draw()
   glTranslatef( Planet::x, Planet::y, Planet::z );
 
   //SHADING
-  //Light and material properties
-  GLfloat mat_ambient[] = { 0.0, 0.0, 0.5, 1.0 }; //set this to planet colors?
-  GLfloat mat_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
-  GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-  GLfloat mat_shininess[] = { 50.0 };
-  GLfloat mat_emission[] = { 0.3, 0.3, 0.3, 1.0 };
+  //Material Properties
+  GLfloat mat_ambient[] = { Planet::ambient.r, Planet::ambient.g, Planet::ambient.b, Planet::ambient.a }; //set this to planet colors?
+  GLfloat mat_diffuse[] = { Planet::diffuse.r, Planet::diffuse.g, Planet::diffuse.b, Planet::diffuse.a };
+  GLfloat mat_specular[] = { Planet::specular.r, Planet::specular.g, Planet::specular.b, Planet::specular.a };
+  GLfloat mat_shininess[] = { Planet::shininess };
+  GLfloat mat_emission[] = { Planet::emissive.r, Planet::emissive.g, Planet::emissive.b, Planet::emissive.a };
+  //Material calls
+  glMaterialfv( GL_FRONT, GL_AMBIENT, mat_ambient );
+  glMaterialfv( GL_FRONT, GL_DIFFUSE, mat_diffuse );
+  glMaterialfv( GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv( GL_FRONT, GL_SHININESS, mat_shininess );
+  glMaterialfv( GL_FRONT, GL_EMISSION, mat_emission );
+
+  //Light Properties
   GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
   GLfloat light_position[] = { Planet::x, Planet::y, Planet::z, 1.0 };
 
@@ -43,13 +51,7 @@ void Planet::draw()
   glLightModelfv( GL_LIGHT_MODEL_AMBIENT, light_ambient ); // Global ambient light.
   glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, 1 ); // Enable local viewpoint
 
-  //Set up material properties
-  glMaterialfv( GL_FRONT, GL_AMBIENT, mat_ambient );
-  glMaterialfv( GL_FRONT, GL_DIFFUSE, mat_diffuse );
-  glMaterialfv( GL_FRONT, GL_SPECULAR, mat_specular);
-  glMaterialfv( GL_FRONT, GL_SHININESS, mat_shininess );
-  glMaterialfv( GL_FRONT, GL_EMISSION, mat_emission );
-
+  //Turn on the lights (after all the params have been set)
   glEnable( GL_LIGHT0 );
   glEnable( GL_LIGHTING );   //enable lighting
 
