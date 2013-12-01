@@ -18,8 +18,12 @@
 
 using namespace std;
 
+Point3 stars[1000];
 Planet planets[10];
 Player noob;
+
+Point3 camera_position;
+
 float distance_from_center;
 
 void update( int ignore_me )
@@ -75,6 +79,13 @@ void update( int ignore_me )
   glutPostRedisplay();
 }
 
+void DoCameraOffset()
+{
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef( camera_position.x, camera_position.y, camera_position.z );
+}
+
 void draw()
 {
   //Draw the scene
@@ -87,18 +98,19 @@ void draw()
   //glBegin();
 
   //draw all the stars in the background
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef( 0.0, 20.0, -75 );
-  glutSolidSphere( 0.5, 8, 8 );
+  for ( int i = 0; i < 1000; i++ )
+  {
+    DoCameraOffset(); //do camera offset
+    glTranslatef( stars[i].x, stars[i].y, stars[i].z );
+    glutSolidSphere( 0.25, 8, 8 );
+  }
+
+  //Set up major star lights (sun, death star, wormholes? )
 
   //draw the planets
   for ( int i = 0; i < 10; i++ )
   {
-    //do camera offset
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef( 0.0, 0.0, 0.0 );
+    DoCameraOffset(); //do camera offset
     //draw planets
     planets[i].draw();
   }
@@ -118,17 +130,39 @@ void resize( int width, int height)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
 
-  glFrustum( -16.0, 16.0, -10.0, 10.0, 5.7, 100.0 );
+  glFrustum( -4.0, 4.0, -2.5, 2.5, 5.0, 90.0 );
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 }
 
 void handleInput( unsigned char key, int x, int y )
 {
+  //cout << key << '\n'; //DEBUG
+
   //handles ASCII key input
-  if ( key == 65 )
+  if ( key == 'a' )
   {
-    //TODO: A
+    camera_position.x += 0.4;
+  }
+  if ( key == 'd' )
+  {
+    camera_position.x -= 0.4;
+  }
+  if ( key == 'w' )
+  {
+    camera_position.y -= 0.4;
+  }
+  if ( key == 's' )
+  {
+    camera_position.y += 0.4;
+  }
+  if ( key == 'q' )
+  {
+    camera_position.z += 0.1;
+  }
+  if ( key == 'e' )
+  {
+    camera_position.z -= 0.1;
   }
   if ( key == 32 )
   {
@@ -231,6 +265,20 @@ void setup()
   glEnable(GL_LIGHTING);   //enable lighting
 
   //Initialization logic.
+  //Set up camera
+  camera_position.x = 0.0;
+  camera_position.y = 0.0;
+  camera_position.z = -5.0;
+
+  //"Randomly" generate stars
+  for ( int i = 0; i < 1000; i++ )
+  {
+    stars[i].x = rand() % 320 - 160; //-160:160
+    stars[i].y = rand() % 200 - 100; //-100:100
+    stars[i].z = rand() % 25 - 75;   //-50:-75
+  }
+
+  //Read in planets.
   for ( int i = 0; i < 10; i++ )
   {
     planets[i] = Planet( i * 3, 0.0, -5.0, 1.0, 100.0 ); //fill array with objects?
@@ -241,6 +289,10 @@ void setup()
   }
 
   readPlanetFromFile( planets[0], "planet0.txt" );
+  readPlanetFromFile( planets[1], "planet1.txt" );
+  readPlanetFromFile( planets[2], "planet2.txt" );
+  readPlanetFromFile( planets[3], "planet3.txt" );
+  readPlanetFromFile( planets[4], "planet4.txt" );
 }
 
 //Main routine

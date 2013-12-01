@@ -19,7 +19,7 @@ void Planet::draw()
 
   //Enable culling.
   glEnable( GL_CULL_FACE );
-  glCullFace( GL_FRONT );
+  glCullFace( GL_BACK );
 
   //glMatrixMode(GL_MODELVIEW);
   //glLoadIdentity();
@@ -55,7 +55,8 @@ void Planet::draw()
   glEnable( GL_LIGHT0 );
   glEnable( GL_LIGHTING );   //enable lighting
 
-  glutSolidSphere( Planet::radius, 25, 25 );
+  //glutWireSphere( Planet::radius, 50, 50 ); //DEBUG
+  glutSolidSphere( Planet::radius, 50, 50 );
 
   glDisable( GL_LIGHT0 );    //turn off light 0
   glDisable( GL_LIGHTING );  //disable lighting
