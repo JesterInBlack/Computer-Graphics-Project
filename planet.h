@@ -29,6 +29,8 @@ public:
     specular = Colour( 1.0, 1.0, 1.0, 1.0 );
     emissive = Colour( 0.0, 0.0, 0.0, 1.0 );
     shininess = 50;
+    death = false;
+    transparent = false;
   }; //constructor
 
   Planet( float p_x, float p_y, float p_z, float p_r, float p_mass ) 
@@ -42,6 +44,8 @@ public:
     specular = Colour( 1.0, 1.0, 1.0, 1.0 );
     emissive = Colour( 0.0, 0.0, 0.0, 1.0 );
     shininess = 50;
+    death = false;
+    transparent = false;
   };
   float mass; //in kg?
   float radius; //in "units"
@@ -54,6 +58,8 @@ public:
   Colour specular; //specular highlight color
   Colour emissive; //emissive color
   int shininess;   //0-128 shininess exponent for spectral lighting
+  bool transparent;//whether to draw it transparent or not
+  bool death;      //whether touching the star will kill you.
   //---------------------
   //Function prototypes
   //---------------------

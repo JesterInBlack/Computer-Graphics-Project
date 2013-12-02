@@ -16,10 +16,14 @@
 #  include <GL/glut.h>
 #endif
 
+#define GL_MULTISAMPLE  0x809D               //this is not defined on windows.
+#define GL_MULTISAMPLE_FILTER_HINT_NV 0x8534 //this is not defined on windows.
+
 using namespace std;
 
 Point3 stars[1000];
-Planet planets[10];
+Planet planets[20];
+const int PLANET_COUNT = 12;
 Player noob;
 
 Point3 camera_position;
@@ -31,7 +35,7 @@ void update( int ignore_me )
   //handles game logic
   noob.grounded = false;
 
-  for ( int i = 0; i < 10; i++ )
+  for ( int i = 0; i < PLANET_COUNT; i++ )
   {
     distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ));
     if ( distance_from_center < planets[i].radius )
@@ -81,7 +85,7 @@ void update( int ignore_me )
 
 void DoCameraOffset()
 {
-  glMatrixMode(GL_MODELVIEW);
+  glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
   glTranslatef( camera_position.x, camera_position.y, camera_position.z );
 }
@@ -106,11 +110,49 @@ void draw()
   }
 
   //Set up major star lights (sun, death star, wormholes? )
+  glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
+  //set up GL_LIGHT0
+  GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_diffuse[] = { 1.0, 0.9, 0.8, 1.0 };
+  GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+
+  //glLightModelfv( GL_LIGHT_MODEL_AMBIENT, light_ambient ); // Global ambient light.
+  //glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, 1 ); // Enable local viewpoint
+
+  glLightfv( GL_LIGHT0, GL_POSITION, light_position );
+  glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
+  glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
+  glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
+
+  GLfloat light_ambient1[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_diffuse1[] = { 1.0, 0.5, 0.3, 1.0 };
+  GLfloat light_specular1[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat light_position1[] = { 25.0, 8.0, 0.0, 1.0 };
+  glLightfv( GL_LIGHT1, GL_POSITION, light_position1 );
+  glLightfv( GL_LIGHT1, GL_AMBIENT, light_ambient1 );
+  glLightfv( GL_LIGHT1, GL_DIFFUSE, light_diffuse1 );
+  glLightfv( GL_LIGHT1, GL_SPECULAR, light_specular1 );
+
+  glEnable( GL_LIGHT0 );
+  glEnable( GL_LIGHT1 );
+  glEnable( GL_LIGHTING );   //enable lighting
+
+  camera_position.x = -1.0 * planets[1].x;
+  camera_position.y = -1.0 * planets[1].y;
 
   //draw the planets
-  for ( int i = 0; i < 10; i++ )
+  for ( int i = 0; i < PLANET_COUNT; i++ )
   {
     DoCameraOffset(); //do camera offset
+
+    //Offset lights
+    GLfloat light_position0[] = { -1.0 * planets[i].x, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
+    GLfloat light_position1[] = { -1.0 * planets[i].x + 25.0 * 2.0, -1.0 * planets[i].y + 8.0 * 2.0, -1.0 * planets[i].z, 1.0 };
+    glLightfv( GL_LIGHT0, GL_POSITION, light_position0 ); //set up GL_LIGHT0
+    glLightfv( GL_LIGHT1, GL_POSITION, light_position1 ); //set up GL_LIGHT1
+
     //draw planets
     planets[i].draw();
   }
@@ -119,6 +161,9 @@ void draw()
   noob.draw();
 
   //glEnd();
+
+  glDisable( GL_LIGHT0 );
+  glDisable( GL_LIGHTING );
 
   glutSwapBuffers(); //swap buffers: display the drawing.
 }
@@ -193,7 +238,7 @@ void readPlanetFromFile( Planet &temp_planet, string filename )
     //Figure out what kind of data we're going to be reading in.
     string linetype;
     in >> linetype;
-    cout << linetype << '\n';
+    //cout << linetype << '\n'; //DEBUG
 
     if ( linetype == "RADIUS" )
     {
@@ -253,6 +298,14 @@ void readPlanetFromFile( Planet &temp_planet, string filename )
     {
       in >> temp_planet.shininess;
     }
+    else if ( linetype == "DEATHSTAR" )
+    {
+      temp_planet.death = true;
+    }
+    else if ( linetype == "TRANSPARENT" )
+    {
+      temp_planet.transparent = true;
+    }
   }
 
   my_file.close();
@@ -261,14 +314,16 @@ void readPlanetFromFile( Planet &temp_planet, string filename )
 
 void setup()
 {
-  glEnable(GL_DEPTH_TEST); //enable depth testing
-  glEnable(GL_LIGHTING);   //enable lighting
+  glEnable( GL_DEPTH_TEST );  //enable depth testing
+  glEnable( GL_MULTISAMPLE ); //turn on antialiasing
+  glHint( GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST ); //we want high quality antialiasing.
+  glEnable( GL_LIGHTING );    //enable lighting
 
   //Initialization logic.
   //Set up camera
   camera_position.x = 0.0;
   camera_position.y = 0.0;
-  camera_position.z = -5.0;
+  camera_position.z = -10.0;
 
   //"Randomly" generate stars
   for ( int i = 0; i < 1000; i++ )
@@ -279,20 +334,17 @@ void setup()
   }
 
   //Read in planets.
-  for ( int i = 0; i < 10; i++ )
+  for ( int i = 0; i < PLANET_COUNT; i++ )
   {
-    planets[i] = Planet( i * 3, 0.0, -5.0, 1.0, 100.0 ); //fill array with objects?
-    planets[i].orbit.r = i * 3;
-    planets[i].orbit.x = 0;
-    planets[i].orbit.y = 0;
-    planets[i].orbit.z = 0;
+    planets[i] = Planet(); //fill array with objects?
+    //construct filename string
+    char* temp_s = new char();
+    string s = "planet";
+    s.append( itoa( i, temp_s, 10 ) );
+    s.append( ".txt" );
+    //load in data.
+    readPlanetFromFile( planets[i], s );
   }
-
-  readPlanetFromFile( planets[0], "planet0.txt" );
-  readPlanetFromFile( planets[1], "planet1.txt" );
-  readPlanetFromFile( planets[2], "planet2.txt" );
-  readPlanetFromFile( planets[3], "planet3.txt" );
-  readPlanetFromFile( planets[4], "planet4.txt" );
 }
 
 //Main routine
@@ -300,7 +352,7 @@ int main(int argc, char** argv)
 {
   //Initialization
   glutInit( &argc, argv );  //initialize glut
-  glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB ); //Set display mode
+  glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_MULTISAMPLE ); //Set display mode, enable antialiasing
 
   //Set up window
   glutInitWindowPosition( 0, 0 ); //set window's position
