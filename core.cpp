@@ -16,11 +16,14 @@
 #  include <GL/glut.h>
 #endif
 
-#define GL_MULTISAMPLE  0x809D               //this is not defined on windows.
-#define GL_MULTISAMPLE_FILTER_HINT_NV 0x8534 //this is not defined on windows.
+#define GL_MULTISAMPLE  0x809D               //this is not defined on windows, so I'm manually defining it.
+#define GL_MULTISAMPLE_FILTER_HINT_NV 0x8534 //this is not defined on windows, so I'm manually defining it.
 
 using namespace std;
 
+//-----------------
+//GAME OBJECT DATA
+//-----------------
 Point3 stars[1000];
 Planet planets[20];
 const int PLANET_COUNT = 12;
@@ -28,202 +31,7 @@ Player noob;
 
 Point3 camera_position;
 
-float distance_from_center;
-
-void update( int ignore_me )
-{
-  //handles game logic
-  noob.grounded = false;
-
-  for ( int i = 0; i < PLANET_COUNT; i++ )
-  {
-    distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ));
-    if ( distance_from_center < planets[i].radius )
-    {
-      noob.grounded = true;
-      //set pos to planet pos + r * a unit vector in the direction of the player.
-      if (noob.position.x < planets[i].x)
-	  {
-		  noob.position.x = planets[i].x - (planets[i].x * planets[i].radius / distance_from_center);
-	  }
-	  else
-	  {
-		  noob.position.x = planets[i].x + (planets[i].x * planets[i].radius / distance_from_center);
-	  }
-	  if (noob.position.y < planets[i].y)
-	  {
-		  noob.position.y = planets[i].y - (planets[i].y * planets[i].radius / distance_from_center);
-	  }
-	  else
-	  {
-		  noob.position.y = planets[i].y + (planets[i].y * planets[i].radius / distance_from_center);
-	  }
-	  if (noob.position.z < planets[i].z)
-	  {
-		  noob.position.z = planets[i].z - (planets[i].z * planets[i].radius / distance_from_center);
-	  }
-	  else
-	  {
-		  noob.position.z = planets[i].z + (planets[i].z * planets[i].radius / distance_from_center);
-	  }
-      //later, we'll also want to move the player with the planet.
-    }
-
-    //move the planets in their orbits.
-    //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
-    //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
-
-    planets[i].update();
-    //cout << i << planets[i].x << "\n"; //DEBUG
-
-    //Do gravitation, acceleration, velocity, position!
-  }
-
-  glutTimerFunc( 17, update, 0 );
-  glutPostRedisplay();
-}
-
-void DoCameraOffset()
-{
-  glMatrixMode( GL_MODELVIEW );
-  glLoadIdentity();
-  glTranslatef( camera_position.x, camera_position.y, camera_position.z );
-}
-
-void draw()
-{
-  //Draw the scene
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the buffers (need to clear both for shading to work right.)
-
-  glLoadIdentity(); //reset orientation
-
-  //For each object
-  //glBegin(), glEnd()
-  //glBegin();
-
-  //draw all the stars in the background
-  for ( int i = 0; i < 1000; i++ )
-  {
-    DoCameraOffset(); //do camera offset
-    glTranslatef( stars[i].x, stars[i].y, stars[i].z );
-    glutSolidSphere( 0.25, 8, 8 );
-  }
-
-  //Set up major star lights (sun, death star, wormholes? )
-  glMatrixMode( GL_MODELVIEW );
-  glLoadIdentity();
-  //set up GL_LIGHT0
-  GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
-  GLfloat light_diffuse[] = { 1.0, 0.9, 0.8, 1.0 };
-  GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-  GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
-
-  //glLightModelfv( GL_LIGHT_MODEL_AMBIENT, light_ambient ); // Global ambient light.
-  //glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, 1 ); // Enable local viewpoint
-
-  glLightfv( GL_LIGHT0, GL_POSITION, light_position );
-  glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
-  glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
-  glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
-
-  GLfloat light_ambient1[] = { 0.0, 0.0, 0.0, 1.0 };
-  GLfloat light_diffuse1[] = { 1.0, 0.5, 0.3, 1.0 };
-  GLfloat light_specular1[] = { 1.0, 1.0, 1.0, 1.0 };
-  GLfloat light_position1[] = { 25.0, 8.0, 0.0, 1.0 };
-  glLightfv( GL_LIGHT1, GL_POSITION, light_position1 );
-  glLightfv( GL_LIGHT1, GL_AMBIENT, light_ambient1 );
-  glLightfv( GL_LIGHT1, GL_DIFFUSE, light_diffuse1 );
-  glLightfv( GL_LIGHT1, GL_SPECULAR, light_specular1 );
-
-  glEnable( GL_LIGHT0 );
-  glEnable( GL_LIGHT1 );
-  glEnable( GL_LIGHTING );   //enable lighting
-
-  camera_position.x = -1.0 * planets[1].x;
-  camera_position.y = -1.0 * planets[1].y;
-
-  //draw the planets
-  for ( int i = 0; i < PLANET_COUNT; i++ )
-  {
-    DoCameraOffset(); //do camera offset
-
-    //Offset lights
-    GLfloat light_position0[] = { -1.0 * planets[i].x, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
-    GLfloat light_position1[] = { -1.0 * planets[i].x + 25.0 * 2.0, -1.0 * planets[i].y + 8.0 * 2.0, -1.0 * planets[i].z, 1.0 };
-    glLightfv( GL_LIGHT0, GL_POSITION, light_position0 ); //set up GL_LIGHT0
-    glLightfv( GL_LIGHT1, GL_POSITION, light_position1 ); //set up GL_LIGHT1
-
-    //draw planets
-    planets[i].draw();
-  }
-
-  //draw the player
-  noob.draw();
-
-  //glEnd();
-
-  glDisable( GL_LIGHT0 );
-  glDisable( GL_LIGHTING );
-
-  glutSwapBuffers(); //swap buffers: display the drawing.
-}
-
-void resize( int width, int height)
-{
-  //Handles resizing the window
-  glViewport( 0, 0, (GLsizei) width, (GLsizei) height);
-  glMatrixMode( GL_PROJECTION );
-  glLoadIdentity();
-
-  glFrustum( -4.0, 4.0, -2.5, 2.5, 5.0, 90.0 );
-  glMatrixMode( GL_MODELVIEW );
-  glLoadIdentity();
-}
-
-void handleInput( unsigned char key, int x, int y )
-{
-  //cout << key << '\n'; //DEBUG
-
-  //handles ASCII key input
-  if ( key == 'a' )
-  {
-    camera_position.x += 0.4;
-  }
-  if ( key == 'd' )
-  {
-    camera_position.x -= 0.4;
-  }
-  if ( key == 'w' )
-  {
-    camera_position.y -= 0.4;
-  }
-  if ( key == 's' )
-  {
-    camera_position.y += 0.4;
-  }
-  if ( key == 'q' )
-  {
-    camera_position.z += 0.1;
-  }
-  if ( key == 'e' )
-  {
-    camera_position.z -= 0.1;
-  }
-  if ( key == 32 )
-  {
-    //TODO: SPACE
-    if ( noob.grounded )
-    {
-      //jump
-    }
-  }
-}
-
-void specialInput( int key, int x, int y )
-{
-  //handles non-ASCII key input. (use GLUT_KEY_w/e constants)
-}
-
+//Setup utility function
 void readPlanetFromFile( Planet &temp_planet, string filename )
 {
   //reads data from file into temp_planet.
@@ -311,7 +119,7 @@ void readPlanetFromFile( Planet &temp_planet, string filename )
   my_file.close();
 }
 
-
+//Setup function
 void setup()
 {
   glEnable( GL_DEPTH_TEST );  //enable depth testing
@@ -323,7 +131,7 @@ void setup()
   //Set up camera
   camera_position.x = 0.0;
   camera_position.y = 0.0;
-  camera_position.z = -10.0;
+  camera_position.z = 10.0;
 
   //"Randomly" generate stars
   for ( int i = 0; i < 1000; i++ )
@@ -347,6 +155,231 @@ void setup()
   }
 }
 
+//Update function
+void update( int ignore_me )
+{
+  //handles game logic
+  //Called once per frame.
+  noob.grounded = false;
+
+  for ( int i = 0; i < PLANET_COUNT; i++ )
+  {
+    float distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ));
+    if ( distance_from_center < planets[i].radius )
+    {
+      if ( planets[i].death == true )
+      {
+        //KILL THE PLAYER!
+      }
+      else
+      {
+        noob.grounded = true;
+        //record the planet to attach to. (ie update with the update.)
+      }
+      //set pos to planet pos + r * a unit vector in the direction of the player.
+      if (noob.position.x < planets[i].x)
+	    {
+		    noob.position.x = planets[i].x - (planets[i].x * planets[i].radius / distance_from_center);
+	    }
+	    else
+	    {
+		    noob.position.x = planets[i].x + (planets[i].x * planets[i].radius / distance_from_center);
+	    }
+	    if (noob.position.y < planets[i].y)
+	    {
+		    noob.position.y = planets[i].y - (planets[i].y * planets[i].radius / distance_from_center);
+	    }
+	    else
+	    {
+		    noob.position.y = planets[i].y + (planets[i].y * planets[i].radius / distance_from_center);
+	    }
+	    if (noob.position.z < planets[i].z)
+	    {
+		    noob.position.z = planets[i].z - (planets[i].z * planets[i].radius / distance_from_center);
+	    }
+	    else
+	    {
+		    noob.position.z = planets[i].z + (planets[i].z * planets[i].radius / distance_from_center);
+	    }
+      //later, we'll also want to move the player with the planet.
+    }
+
+    //move the planets in their orbits.
+    //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
+    //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
+
+    planets[i].update();
+    //cout << i << planets[i].x << "\n"; //DEBUG
+
+    //Do gravitation, acceleration, velocity, position!
+  }
+
+  glutTimerFunc( 17, update, 0 );
+  glutPostRedisplay();
+}
+
+//Draw utility functions
+void doCameraOffset()
+{
+  //Translates things that are drawn, so the camera can "move".
+  glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
+  glTranslatef( -1.0 * camera_position.x, -1.0 * camera_position.y, -1.0 * camera_position.z );
+}
+
+void sunLight()
+{
+  //sets up the sun's light
+  //set up GL_LIGHT0
+  GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_diffuse[] = { 1.0, 0.9, 0.8, 1.0 };
+  GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_attenuation[] = { 0.001 };
+
+  glLightfv( GL_LIGHT0, GL_POSITION, light_position );
+  glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
+  glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
+  glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
+  glLightfv( GL_LIGHT0, GL_QUADRATIC_ATTENUATION, light_attenuation );
+
+  glEnable( GL_LIGHT0 ); //turn on the light
+}
+
+void deathStarLight()
+{
+  //sets up the other sun's light
+  //set up GL_LIGHT1
+  GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_diffuse[] = { 1.0, 0.5, 0.3, 1.0 };
+  GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat light_position[] = { 25.0, 8.0, 0.0, 1.0 };
+  GLfloat light_attenuation[] = { 0.05 };
+
+  glLightfv( GL_LIGHT1, GL_POSITION, light_position );
+  glLightfv( GL_LIGHT1, GL_AMBIENT, light_ambient );
+  glLightfv( GL_LIGHT1, GL_DIFFUSE, light_diffuse );
+  glLightfv( GL_LIGHT1, GL_SPECULAR, light_specular );
+  glLightfv( GL_LIGHT1, GL_LINEAR_ATTENUATION, light_attenuation );
+
+  glEnable( GL_LIGHT1 ); //turn on the light
+}
+
+//Draw function
+void draw()
+{
+  //Draw the scene
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the buffers (need to clear both for shading to work right.)
+
+  glLoadIdentity(); //reset orientation
+
+  //For each object
+  //glBegin(), glEnd()
+  //glBegin();
+
+  //draw all the stars in the background
+  for ( int i = 0; i < 1000; i++ )
+  {
+    doCameraOffset(); //do camera offset
+    glTranslatef( stars[i].x, stars[i].y, stars[i].z );
+    glutSolidSphere( 0.25, 8, 8 );
+  }
+
+  //Set up major star lights (sun, death star, wormholes? )
+  glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
+  //TODO: make the camera transforms make sense
+  //TODO: functionalize the lighting.
+
+  sunLight();
+  deathStarLight();
+  glEnable( GL_LIGHTING );   //enable lighting
+
+  //camera_position.x = planets[1].x;
+  //camera_position.y = planets[1].y;
+
+  //draw the planets
+  for ( int i = 0; i < PLANET_COUNT; i++ )
+  {
+    doCameraOffset(); //do camera offset
+
+    //Offset lights
+    GLfloat light_position0[] = { -1.0 * planets[i].x, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
+    GLfloat light_position1[] = { -1.0 * planets[i].x + 25.0 * 2.0, -1.0 * planets[i].y + 8.0 * 2.0, -1.0 * planets[i].z, 1.0 };
+    glLightfv( GL_LIGHT0, GL_POSITION, light_position0 ); //set up GL_LIGHT0
+    glLightfv( GL_LIGHT1, GL_POSITION, light_position1 ); //set up GL_LIGHT1
+
+    //draw planets
+    planets[i].draw();
+  }
+
+  //draw the player
+  noob.draw();
+
+  //glEnd();
+
+  glDisable( GL_LIGHT0 );
+  glDisable( GL_LIGHTING );
+
+  glutSwapBuffers(); //swap buffers: display the drawing.
+}
+
+void resize( int width, int height)
+{
+  //Handles resizing the window
+  glViewport( 0, 0, (GLsizei) width, (GLsizei) height);
+  glMatrixMode( GL_PROJECTION );
+  glLoadIdentity();
+
+  glFrustum( -4.0, 4.0, -2.5, 2.5, 5.0, 90.0 );
+  glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
+}
+
+void handleInput( unsigned char key, int x, int y )
+{
+  //cout << key << '\n'; //DEBUG
+
+  //handles ASCII key input
+  if ( key == 'a' )
+  {
+    camera_position.x -= 0.4;
+  }
+  if ( key == 'd' )
+  {
+    camera_position.x += 0.4;
+  }
+  if ( key == 'w' )
+  {
+    camera_position.y += 0.4;
+  }
+  if ( key == 's' )
+  {
+    camera_position.y -= 0.4;
+  }
+  if ( key == 'q' )
+  {
+    camera_position.z -= 0.1;
+  }
+  if ( key == 'e' )
+  {
+    camera_position.z += 0.1;
+  }
+  if ( key == 32 )
+  {
+    //TODO: SPACE
+    if ( noob.grounded )
+    {
+      //jump
+    }
+  }
+}
+
+void specialInput( int key, int x, int y )
+{
+  //handles non-ASCII key input. (use GLUT_KEY_w/e constants)
+}
+
 //Main routine
 int main(int argc, char** argv)
 {
@@ -356,14 +389,14 @@ int main(int argc, char** argv)
 
   //Set up window
   glutInitWindowPosition( 0, 0 ); //set window's position
-  glutInitWindowSize( 1440, 900 ); //set window's size
-  glutCreateWindow("Title!");
+  glutInitWindowSize( 1440, 900 ); //set window's size (fullscreen)
+  glutCreateWindow("Moon Bounce");
 
   //setup game stuff
   setup();
 
   //Setup callbacks
-  glutTimerFunc( 17, update, 0 );
+  glutTimerFunc( 17, update, 0 ); //call update on a delay of 17 ms
   glutDisplayFunc(draw);
   glutReshapeFunc(resize);
   glutKeyboardFunc(handleInput);
