@@ -1,5 +1,4 @@
 //Gabriel Violette + Geo Kersey
-//TODO: reference where you stole the code from (gupta loadtextures.cpp)
 //Core Game Code
 #include <iostream>
 #include <fstream>
@@ -25,14 +24,9 @@ using namespace std;
 //GAME OBJECT DATA
 //-----------------
 Point3 stars[1000];
-Planet planets[20];
-const int PLANET_COUNT = 12;
+Planet planets[31];
+const int PLANET_COUNT = 31;
 Player noob;
-
-float old_x;
-float new_x;
-float old_y;
-float new_y;	//these will allow the player to glue to a planet
 
 Point3 camera_position;
 
@@ -119,6 +113,10 @@ void readPlanetFromFile( Planet &temp_planet, string filename )
     {
       temp_planet.transparent = true;
     }
+    else if ( linetype == "VICTORY" )
+    {
+      temp_planet.win_on_touch = true;
+    }
   }
 
   my_file.close();
@@ -152,7 +150,7 @@ void setup()
     planets[i] = Planet(); //fill array with objects?
     //construct filename string
     char* temp_s = new char();
-    string s = "planet";
+    string s = "planets/planet";
     s.append( itoa( i, temp_s, 10 ) );
     s.append( ".txt" );
     //load in data.
@@ -165,152 +163,60 @@ void update( int ignore_me )
 {
   //handles game logic
   //Called once per frame.
-   //initialize force to zero
-  float player_fx = 0.0;
-  float player_fy = 0.0;
+  noob.grounded = false;
 
   for ( int i = 0; i < PLANET_COUNT; i++ )
   {
-    float distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ));
-	 //record the distance from each planet
-	noob.distances[i] = distance_from_center;
+    float distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) + pow ( noob.position.z - planets[i].z, 2 ));
     if ( distance_from_center < planets[i].radius )
     {
       if ( planets[i].death == true )
       {
-        //KILL THE PLAYER! and respawn
-		  noob.position.x = 17;
-		  noob.position.y = 0;
+        //KILL THE PLAYER!
+      }
+      else if ( planets[i].win_on_touch == true )
+      {
+        //WIN!
       }
       else
       {
         noob.grounded = true;
-		//noob.velocity_x = 0;
-		//noob.velocity_y = 0;
-
+        //record the planet to attach to. (ie update with the update.)
       }
       //set pos to planet pos + r * a unit vector in the direction of the player.
-	  noob.position.x = planets[i].radius * cos(atan2(noob.position.y - planets[i].y, noob.position.x - planets[i].x)) + planets[i].x;
-	  noob.position.y = planets[i].radius * sin(atan2(noob.position.y - planets[i].y, noob.position.x - planets[i].x)) + planets[i].y;
+      if (noob.position.x < planets[i].x)
+	    {
+		    noob.position.x = planets[i].x - (planets[i].x * planets[i].radius / distance_from_center);
+	    }
+	    else
+	    {
+		    noob.position.x = planets[i].x + (planets[i].x * planets[i].radius / distance_from_center);
+	    }
+	    if (noob.position.y < planets[i].y)
+	    {
+		    noob.position.y = planets[i].y - (planets[i].y * planets[i].radius / distance_from_center);
+	    }
+	    else
+	    {
+		    noob.position.y = planets[i].y + (planets[i].y * planets[i].radius / distance_from_center);
+	    }
+	    if (noob.position.z < planets[i].z)
+	    {
+		    noob.position.z = planets[i].z - (planets[i].z * planets[i].radius / distance_from_center);
+	    }
+	    else
+	    {
+		    noob.position.z = planets[i].z + (planets[i].z * planets[i].radius / distance_from_center);
+	    }
       //later, we'll also want to move the player with the planet.
     }
 
     //move the planets in their orbits.
-    //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
-    //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
-
-	float dx = -1*(noob.position.x - planets[i].x);
-	float dy = -1*(noob.position.y - planets[i].y);
-	float g;
-	if ( dx == 0 && dy == 0 )
-	{
-		g = 0.0;
-		//infinity catch
-	}
-	else
-	{
-		g = 1.0 * planets[i].mass / ( (dx * dx) + (dy * dy) );
-	}
-	float gx = g * cos( atan2( dy, dx ) );
-	float gy = g * sin( atan2( dy, dx ) );
-
-
-	//NO!
-	/*float f = 0.0;
-	if ( noob.position.x != planets[i].x && noob.position.y != planets[i].y ) //division by 0 check
-	{
-		fx = planets[i].mass * 0.00000001 / ( (noob.position.x - planets[i].x) * (noob.position.x - planets[i].x) );
-		if ( (noob.position.x - planets[i].x) > 0.0 )
-		{
-			f = f * -1.0;
-		}
-	}*/
-
-	//add to total force
-	player_fx += gx;
-	player_fy += gy;
-
-
-	if (i == noob.closest_planet)
-	{
-		//update player
-		//Do gravitation, acceleration, velocity, position!
-		//float deltaX, deltaY;
-		//deltaX = cos(atan2(noob.position.y-planets[i].y, noob.position.x-planets[i].x)) * 0.00001 * planets[i].mass;
-		//deltaY = sin(atan2(noob.position.y-planets[i].y, noob.position.x-planets[i].x)) * 0.00001 * planets[i].mass;
-		//if (!noob.grounded)
-		//{
-			//noob.update(deltaX, deltaY);	//change the velocity //NO!
-		//}
-		if (noob.grounded == true)
-		{
-			//glue to the planet
-			//record old position of planet before update
-			old_x = planets[i].x;
-			old_y = planets[i].y;
-		}
-	}
     planets[i].update();
-	if (noob.closest_planet == i)
-	{
-		new_x = planets[i].x;
-		new_y = planets[i].y;
-	}
-
-	//if the player is attached to the planet, move them along with it.
-	if (noob.grounded == true && i == noob.closest_planet)
-	{
-		noob.position.x = noob.position.x + new_x - old_x;
-		noob.position.y = noob.position.y + new_y - old_y;
-	}
     //cout << i << planets[i].x << "\n"; //DEBUG
 
-    
+    //Do gravitation, acceleration, velocity, position!
   }
-  int temp = 0;
-  float smallest = noob.distances[0];
-  for (int i = 0; i < PLANET_COUNT; i++)
-  {
-	  if (noob.distances[i] < smallest)
-	  {
-		  smallest = noob.distances[i];
-		  temp = i;
-	  }
-  }
-
-  if ( noob.grounded == false )
-  {
-	//free floating, apply gravity.
-	noob.acceleration.x = player_fx;
-	noob.acceleration.y = player_fy;
-	//noob.acceleration.z += player_f[2];
-
-	//noob.acceleration.x *= 0.9; //air resistance?
-
-	noob.velocity.x += noob.acceleration.x;
-	noob.velocity.y += noob.acceleration.y;
-    //noob.velocity.z += noob.acceleration.z;
-
-    noob.position.x += noob.velocity.x;
-	noob.position.y += noob.velocity.y;
-	//noob.position.z += noob.velocity.z;
-  }
-  else
-  {
-	  //hit the planet, zero out velocity and acceleration
-	  noob.velocity.x = 0.0;
-	  noob.velocity.y = 0.0;
-	  //noob.velocity.z = 0.0;
-
-	  noob.acceleration.x = 0.0;
-	  noob.acceleration.y = 0.0;
-	  //noob.acceleration.z = 0.0;
-  }
-  cout << "V: " << noob.velocity.x << ", " << noob.velocity.y << '\n';
-  cout << noob.acceleration.x << ", " << noob.acceleration.y << ", "  << '\n';
-
-  noob.closest_planet = temp;
-
 
   glutTimerFunc( 17, update, 0 );
   glutPostRedisplay();
@@ -363,6 +269,25 @@ void deathStarLight()
   glEnable( GL_LIGHT1 ); //turn on the light
 }
 
+void victoryLight()
+{
+  //sets up the victory light.
+  //set up GL_LIGHT2
+  GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_diffuse[] = { 0.5, 0.0, 1.0, 1.0 };
+  GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat light_position[] = { 43.0, 0.0, 0.0, 1.0 };
+  GLfloat light_attenuation[] = { 0.01 };
+
+  glLightfv( GL_LIGHT2, GL_POSITION, light_position );
+  glLightfv( GL_LIGHT2, GL_AMBIENT, light_ambient );
+  glLightfv( GL_LIGHT2, GL_DIFFUSE, light_diffuse );
+  glLightfv( GL_LIGHT2, GL_SPECULAR, light_specular );
+  glLightfv( GL_LIGHT2, GL_QUADRATIC_ATTENUATION, light_attenuation );
+
+  glEnable( GL_LIGHT2 ); //turn on the light
+}
+
 //Draw function
 void draw()
 {
@@ -370,10 +295,6 @@ void draw()
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the buffers (need to clear both for shading to work right.)
 
   glLoadIdentity(); //reset orientation
-
-  //For each object
-  //glBegin(), glEnd()
-  //glBegin();
 
   //draw all the stars in the background
   for ( int i = 0; i < 1000; i++ )
@@ -386,15 +307,14 @@ void draw()
   //Set up major star lights (sun, death star, wormholes? )
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
-  //TODO: make the camera transforms make sense
-  //TODO: functionalize the lighting.
 
   sunLight();
   deathStarLight();
+  victoryLight();
   glEnable( GL_LIGHTING );   //enable lighting
 
-  camera_position.x = noob.position.x;
-  camera_position.y = noob.position.y;
+  //camera_position.x = planets[1].x;
+  //camera_position.y = planets[1].y;
 
   //draw the planets
   for ( int i = 0; i < PLANET_COUNT; i++ )
@@ -404,8 +324,10 @@ void draw()
     //Offset lights
     GLfloat light_position0[] = { -1.0 * planets[i].x, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
     GLfloat light_position1[] = { -1.0 * planets[i].x + 25.0 * 2.0, -1.0 * planets[i].y + 8.0 * 2.0, -1.0 * planets[i].z, 1.0 };
+    GLfloat light_position2[] = { -1.0 * planets[i].x + 43.0 * 2.0, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
     glLightfv( GL_LIGHT0, GL_POSITION, light_position0 ); //set up GL_LIGHT0
     glLightfv( GL_LIGHT1, GL_POSITION, light_position1 ); //set up GL_LIGHT1
+    glLightfv( GL_LIGHT2, GL_POSITION, light_position2 ); //set up GL_LIGHT2
 
     //draw planets
     planets[i].draw();
@@ -417,6 +339,8 @@ void draw()
   //glEnd();
 
   glDisable( GL_LIGHT0 );
+  glDisable( GL_LIGHT1 );
+  glDisable( GL_LIGHT2 );
   glDisable( GL_LIGHTING );
 
   glutSwapBuffers(); //swap buffers: display the drawing.
@@ -466,15 +390,14 @@ void handleInput( unsigned char key, int x, int y )
   if ( key == 32 )
   {
     //TODO: SPACE
-    if ( noob.grounded == true )
+    if ( noob.grounded )
     {
       //jump
-		noob.position.x += 0.1 * cos(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-		noob.position.y += 0.1 * sin(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-		noob.velocity.x += 1.25 * cos(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-		noob.velocity.y += 1.25 * sin(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-		noob.grounded = false;
     }
+  }
+  if ( key == 27 ) //escape
+  {
+    exit( 0 ); //end the program
   }
 }
 
@@ -491,9 +414,10 @@ int main(int argc, char** argv)
   glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_MULTISAMPLE ); //Set display mode, enable antialiasing
 
   //Set up window
-  glutInitWindowPosition( 0, 0 ); //set window's position
-  glutInitWindowSize( 1440, 900 ); //set window's size (fullscreen)
+  //glutInitWindowPosition( 0, 0 ); //set window's position
+  //glutInitWindowSize( 1440, 900 ); //set window's size
   glutCreateWindow("Moon Bounce");
+  glutFullScreen(); //go fullscreen!
 
   //setup game stuff
   setup();
