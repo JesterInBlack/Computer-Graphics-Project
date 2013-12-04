@@ -63,12 +63,7 @@ void Planet::draw()
   glMaterialfv( GL_FRONT, GL_EMISSION, mat_emission );
 
   //Light Properties
-  GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
-  //GLfloat light_position[] = { -1.0 * Planet::x, -1.0 * Planet::y, -1.0 * Planet::z, 1.0 };
-
-  //set up GL_LIGHT0
-  //glLightfv( GL_LIGHT0, GL_POSITION, light_position );
-  //glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
+  GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
 
   //Light model stuff
   glLightModelfv( GL_LIGHT_MODEL_AMBIENT, light_ambient ); // Global ambient light.
@@ -78,8 +73,8 @@ void Planet::draw()
   //glEnable( GL_LIGHT0 );
   //glEnable( GL_LIGHTING );   //enable lighting
 
-  //glutWireSphere( Planet::radius, 50, 50 ); //DEBUG
   glutSolidSphere( Planet::radius, 50, 50 );
+  //glutWireSphere( Planet::radius, 50, 50 ); //DEBUG
 
   //glDisable( GL_LIGHT0 );    //turn off light 0
   //glDisable( GL_LIGHTING );  //disable lighting

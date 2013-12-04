@@ -1,5 +1,4 @@
 //Gabriel Violette + Geo Kersey
-//TODO: reference where you stole the code from (gupta loadtextures.cpp)
 //Core Game Code
 #include <iostream>
 #include <fstream>
@@ -25,8 +24,8 @@ using namespace std;
 //GAME OBJECT DATA
 //-----------------
 Point3 stars[1000];
-Planet planets[20];
-const int PLANET_COUNT = 12;
+Planet planets[31];
+const int PLANET_COUNT = 31;
 Player noob;
 
 Point3 camera_position;
@@ -114,6 +113,10 @@ void readPlanetFromFile( Planet &temp_planet, string filename )
     {
       temp_planet.transparent = true;
     }
+    else if ( linetype == "VICTORY" )
+    {
+      temp_planet.win_on_touch = true;
+    }
   }
 
   my_file.close();
@@ -147,7 +150,7 @@ void setup()
     planets[i] = Planet(); //fill array with objects?
     //construct filename string
     char* temp_s = new char();
-    string s = "planet";
+    string s = "planets/planet";
     s.append( itoa( i, temp_s, 10 ) );
     s.append( ".txt" );
     //load in data.
@@ -170,6 +173,10 @@ void update( int ignore_me )
       if ( planets[i].death == true )
       {
         //KILL THE PLAYER!
+      }
+      else if ( planets[i].win_on_touch == true )
+      {
+        //WIN!
       }
       else
       {
@@ -205,9 +212,6 @@ void update( int ignore_me )
     }
 
     //move the planets in their orbits.
-    //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
-    //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
-
     planets[i].update();
     //cout << i << planets[i].x << "\n"; //DEBUG
 
@@ -265,6 +269,25 @@ void deathStarLight()
   glEnable( GL_LIGHT1 ); //turn on the light
 }
 
+void victoryLight()
+{
+  //sets up the victory light.
+  //set up GL_LIGHT2
+  GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat light_diffuse[] = { 0.5, 0.0, 1.0, 1.0 };
+  GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat light_position[] = { 43.0, 0.0, 0.0, 1.0 };
+  GLfloat light_attenuation[] = { 0.01 };
+
+  glLightfv( GL_LIGHT2, GL_POSITION, light_position );
+  glLightfv( GL_LIGHT2, GL_AMBIENT, light_ambient );
+  glLightfv( GL_LIGHT2, GL_DIFFUSE, light_diffuse );
+  glLightfv( GL_LIGHT2, GL_SPECULAR, light_specular );
+  glLightfv( GL_LIGHT2, GL_QUADRATIC_ATTENUATION, light_attenuation );
+
+  glEnable( GL_LIGHT2 ); //turn on the light
+}
+
 //Draw function
 void draw()
 {
@@ -272,10 +295,6 @@ void draw()
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the buffers (need to clear both for shading to work right.)
 
   glLoadIdentity(); //reset orientation
-
-  //For each object
-  //glBegin(), glEnd()
-  //glBegin();
 
   //draw all the stars in the background
   for ( int i = 0; i < 1000; i++ )
@@ -288,11 +307,10 @@ void draw()
   //Set up major star lights (sun, death star, wormholes? )
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
-  //TODO: make the camera transforms make sense
-  //TODO: functionalize the lighting.
 
   sunLight();
   deathStarLight();
+  victoryLight();
   glEnable( GL_LIGHTING );   //enable lighting
 
   //camera_position.x = planets[1].x;
@@ -306,8 +324,10 @@ void draw()
     //Offset lights
     GLfloat light_position0[] = { -1.0 * planets[i].x, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
     GLfloat light_position1[] = { -1.0 * planets[i].x + 25.0 * 2.0, -1.0 * planets[i].y + 8.0 * 2.0, -1.0 * planets[i].z, 1.0 };
+    GLfloat light_position2[] = { -1.0 * planets[i].x + 43.0 * 2.0, -1.0 * planets[i].y, -1.0 * planets[i].z, 1.0 };
     glLightfv( GL_LIGHT0, GL_POSITION, light_position0 ); //set up GL_LIGHT0
     glLightfv( GL_LIGHT1, GL_POSITION, light_position1 ); //set up GL_LIGHT1
+    glLightfv( GL_LIGHT2, GL_POSITION, light_position2 ); //set up GL_LIGHT2
 
     //draw planets
     planets[i].draw();
@@ -319,6 +339,8 @@ void draw()
   //glEnd();
 
   glDisable( GL_LIGHT0 );
+  glDisable( GL_LIGHT1 );
+  glDisable( GL_LIGHT2 );
   glDisable( GL_LIGHTING );
 
   glutSwapBuffers(); //swap buffers: display the drawing.
@@ -373,6 +395,10 @@ void handleInput( unsigned char key, int x, int y )
       //jump
     }
   }
+  if ( key == 27 ) //escape
+  {
+    exit( 0 ); //end the program
+  }
 }
 
 void specialInput( int key, int x, int y )
@@ -388,9 +414,10 @@ int main(int argc, char** argv)
   glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_MULTISAMPLE ); //Set display mode, enable antialiasing
 
   //Set up window
-  glutInitWindowPosition( 0, 0 ); //set window's position
-  glutInitWindowSize( 1440, 900 ); //set window's size (fullscreen)
+  //glutInitWindowPosition( 0, 0 ); //set window's position
+  //glutInitWindowSize( 1440, 900 ); //set window's size
   glutCreateWindow("Moon Bounce");
+  glutFullScreen(); //go fullscreen!
 
   //setup game stuff
   setup();

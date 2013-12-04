@@ -31,6 +31,7 @@ public:
     shininess = 50;
     death = false;
     transparent = false;
+    win_on_touch = false;
   }; //constructor
 
   Planet( float p_x, float p_y, float p_z, float p_r, float p_mass ) 
@@ -46,6 +47,7 @@ public:
     shininess = 50;
     death = false;
     transparent = false;
+    win_on_touch = false;
   };
   float mass; //in kg?
   float radius; //in "units"
@@ -60,6 +62,7 @@ public:
   int shininess;   //0-128 shininess exponent for spectral lighting
   bool transparent;//whether to draw it transparent or not
   bool death;      //whether touching the star will kill you.
+  bool win_on_touch; //for the victory planet.
   //---------------------
   //Function prototypes
   //---------------------
