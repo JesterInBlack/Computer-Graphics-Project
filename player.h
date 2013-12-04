@@ -15,10 +15,34 @@
 class Player
 {
 public:
-  Player() { position = Point3(); }; //constructor
+  Player()
+  { 
+	position = Point3();
+	position.x = 17;
+    velocity = Point3();
+	acceleration = Point3();
+	force = Point3();
+
+	for (int i = 0; i < 20; i++)
+	{
+		distances[i] = 0;
+	}
+	//velocity_x = 0;
+	//velocity_y = 0;
+  }; //constructor
+
   Point3 position;
+  Point3 velocity;
+  Point3 acceleration;
+  Point3 force;
+
   bool grounded;
   void draw();
-  void set_position(float new_x, float new_y, float new_z);
+  float distances[20];
+  int closest_planet;
+  void update(float deltaX, float deltaY);
+  //float velocity_x;
+  //float velocity_y;
+
 private:
 };

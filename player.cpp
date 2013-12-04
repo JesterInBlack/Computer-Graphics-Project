@@ -2,6 +2,7 @@
 
 #include "player.h"
 
+
 void Player::draw()
 {
   //DO STUFF
@@ -10,7 +11,12 @@ void Player::draw()
 }
 
 
-void Player::set_position(float new_x, float new_y, float new_z)
+void Player::update(float deltaX, float deltaY)
 {
-	
+	/*Player::velocity_x = Player::velocity_x + deltaX;
+	Player::velocity_y = Player::velocity_y + deltaY;		//change velocity
+
+	//change position
+	Player::position.x = Player::position.x + Player::velocity_x;
+	Player::position.y = Player::position.y + Player::velocity_y;*/
 }
