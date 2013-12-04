@@ -69,15 +69,9 @@ void Planet::draw()
   glLightModelfv( GL_LIGHT_MODEL_AMBIENT, light_ambient ); // Global ambient light.
   glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, 1 ); // Enable local viewpoint
 
-  //Turn on the lights (after all the params have been set)
-  //glEnable( GL_LIGHT0 );
-  //glEnable( GL_LIGHTING );   //enable lighting
-
   glutSolidSphere( Planet::radius, 50, 50 );
   //glutWireSphere( Planet::radius, 50, 50 ); //DEBUG
 
-  //glDisable( GL_LIGHT0 );    //turn off light 0
-  //glDisable( GL_LIGHTING );  //disable lighting
   glDisable( GL_CULL_FACE ); //disable culling
   glDisable( GL_BLEND ); //disable blending
 

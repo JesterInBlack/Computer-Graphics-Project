@@ -28,12 +28,9 @@ Planet planets[31];
 const int PLANET_COUNT = 31;
 Player noob;
 
-float old_x;
-float new_x;
-float old_y;
-float new_y;	//these will allow the player to glue to a planet
-
 Point3 camera_position;
+
+const float GRAVITATIONAL_CONSTANT = 0.25;
 
 //Setup utility function
 void readPlanetFromFile( Planet &temp_planet, string filename )
@@ -166,110 +163,96 @@ void setup()
 //Update function
 void update( int ignore_me )
 {
-  //handles game logic
+  //Handles game logic
   //Called once per frame.
-   //initialize force to zero
+  //initialize force to zero
   float player_fx = 0.0;
   float player_fy = 0.0;
 
+  //these will allow the player to glue to a planet
+  float old_x;
+  float new_x;
+  float old_y;
+  float new_y;
+
   for ( int i = 0; i < PLANET_COUNT; i++ )
   {
-    float distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ));
-	 //record the distance from each planet
-	noob.distances[i] = distance_from_center;
+    float distance_from_center = sqrt( pow( noob.position.x - planets[i].x, 2 ) + pow( noob.position.y - planets[i].y, 2 ) );
+	  //record the distance from each planet
+	  noob.distances[i] = distance_from_center;
     if ( distance_from_center < planets[i].radius )
     {
       if ( planets[i].death == true )
       {
-        //KILL THE PLAYER! and respawn
-		  noob.position.x = 17;
-		  noob.position.y = 0;
+        //KILL THE PLAYER! and respawn them.
+		    noob.position.x = planets[noob.prev_planet].x;
+		    noob.position.y = planets[noob.prev_planet].y;
+      }
+      else if ( planets[i].win_on_touch == true )
+      {
+        //You win!
+        exit( 0 );
       }
       else
       {
         noob.grounded = true;
-		//noob.velocity_x = 0;
-		//noob.velocity_y = 0;
-
+        noob.prev_planet = i;
+        noob.closest_planet = i;
       }
       //set pos to planet pos + r * a unit vector in the direction of the player.
-	  noob.position.x = planets[i].radius * cos(atan2(noob.position.y - planets[i].y, noob.position.x - planets[i].x)) + planets[i].x;
-	  noob.position.y = planets[i].radius * sin(atan2(noob.position.y - planets[i].y, noob.position.x - planets[i].x)) + planets[i].y;
-      //later, we'll also want to move the player with the planet.
+	    noob.position.x = planets[i].radius * cos( atan2( noob.position.y - planets[i].y, noob.position.x - planets[i].x ) ) + planets[i].x;
+	    noob.position.y = planets[i].radius * sin( atan2( noob.position.y - planets[i].y, noob.position.x - planets[i].x ) ) + planets[i].y;
     }
 
     //move the planets in their orbits.
-    //Orbit should be in the form pt, radius, angular velocity. (keep it planar for simplicity?)
-    //rotation speed should be in the form of angular velocity. (keep it planar for simplicity?)
+	  float dx = -1*(noob.position.x - planets[i].x);
+	  float dy = -1*(noob.position.y - planets[i].y);
+	  float g;
+	  if ( dx == 0 && dy == 0 ) //division by zero: infinity catch
+	  {
+		  g = 0.0;
+	  }
+	  else
+	  {
+	 	  g = GRAVITATIONAL_CONSTANT * planets[i].mass / ( (dx * dx) + (dy * dy) );
+	  }
+	  float gx = g * cos( atan2( dy, dx ) );
+	  float gy = g * sin( atan2( dy, dx ) );
 
-	float dx = -1*(noob.position.x - planets[i].x);
-	float dy = -1*(noob.position.y - planets[i].y);
-	float g;
-	if ( dx == 0 && dy == 0 )
-	{
-		g = 0.0;
-		//infinity catch
-	}
-	else
-	{
-		g = 1.0 * planets[i].mass / ( (dx * dx) + (dy * dy) );
-	}
-	float gx = g * cos( atan2( dy, dx ) );
-	float gy = g * sin( atan2( dy, dx ) );
-
-
-	//NO!
-	/*float f = 0.0;
-	if ( noob.position.x != planets[i].x && noob.position.y != planets[i].y ) //division by 0 check
-	{
-		fx = planets[i].mass * 0.00000001 / ( (noob.position.x - planets[i].x) * (noob.position.x - planets[i].x) );
-		if ( (noob.position.x - planets[i].x) > 0.0 )
-		{
-			f = f * -1.0;
-		}
-	}*/
-
-	//add to total force
-	player_fx += gx;
-	player_fy += gy;
+	  //add to total force
+	  player_fx += gx;
+	  player_fy += gy;
 
 
-	if (i == noob.closest_planet)
-	{
-		//update player
-		//Do gravitation, acceleration, velocity, position!
-		//float deltaX, deltaY;
-		//deltaX = cos(atan2(noob.position.y-planets[i].y, noob.position.x-planets[i].x)) * 0.00001 * planets[i].mass;
-		//deltaY = sin(atan2(noob.position.y-planets[i].y, noob.position.x-planets[i].x)) * 0.00001 * planets[i].mass;
-		//if (!noob.grounded)
-		//{
-			//noob.update(deltaX, deltaY);	//change the velocity //NO!
-		//}
-		if (noob.grounded == true)
-		{
-			//glue to the planet
-			//record old position of planet before update
-			old_x = planets[i].x;
-			old_y = planets[i].y;
-		}
-	}
+	  if (i == noob.closest_planet)
+	  {
+		  if (noob.grounded == true)
+		  {
+			  //glue to the planet
+			  //record old position of planet before update
+			  old_x = planets[i].x;
+			  old_y = planets[i].y;
+		  }
+	  }
+
+    //update the planet
     planets[i].update();
-	if (noob.closest_planet == i)
-	{
-		new_x = planets[i].x;
-		new_y = planets[i].y;
-	}
 
-	//if the player is attached to the planet, move them along with it.
-	if (noob.grounded == true && i == noob.closest_planet)
-	{
-		noob.position.x = noob.position.x + new_x - old_x;
-		noob.position.y = noob.position.y + new_y - old_y;
-	}
-    //cout << i << planets[i].x << "\n"; //DEBUG
+	  if (noob.closest_planet == i)
+	  {
+		  new_x = planets[i].x;
+		  new_y = planets[i].y;
+	  }
 
-    
+	  //if the player is attached to the planet, move them along with it.
+	  if (noob.grounded == true && i == noob.closest_planet)
+	  {
+		  noob.position.x = noob.position.x + new_x - old_x;
+		  noob.position.y = noob.position.y + new_y - old_y;
+	  }
   }
+  //this approach had a bug where you could snap from large planets to others.
+  /*
   int temp = 0;
   float smallest = noob.distances[0];
   for (int i = 0; i < PLANET_COUNT; i++)
@@ -280,39 +263,31 @@ void update( int ignore_me )
 		  temp = i;
 	  }
   }
+  */
 
   if ( noob.grounded == false )
   {
-	//free floating, apply gravity.
-	noob.acceleration.x = player_fx;
-	noob.acceleration.y = player_fy;
-	//noob.acceleration.z += player_f[2];
+	  //free floating, apply gravity.
+	  noob.acceleration.x = player_fx;
+	  noob.acceleration.y = player_fy;
 
-	//noob.acceleration.x *= 0.9; //air resistance?
-
-	noob.velocity.x += noob.acceleration.x;
-	noob.velocity.y += noob.acceleration.y;
-    //noob.velocity.z += noob.acceleration.z;
+	  noob.velocity.x += noob.acceleration.x;
+	  noob.velocity.y += noob.acceleration.y;
 
     noob.position.x += noob.velocity.x;
-	noob.position.y += noob.velocity.y;
-	//noob.position.z += noob.velocity.z;
+	  noob.position.y += noob.velocity.y;
   }
   else
   {
 	  //hit the planet, zero out velocity and acceleration
 	  noob.velocity.x = 0.0;
 	  noob.velocity.y = 0.0;
-	  //noob.velocity.z = 0.0;
 
 	  noob.acceleration.x = 0.0;
 	  noob.acceleration.y = 0.0;
-	  //noob.acceleration.z = 0.0;
   }
-  cout << "V: " << noob.velocity.x << ", " << noob.velocity.y << '\n';
-  cout << noob.acceleration.x << ", " << noob.acceleration.y << ", "  << '\n';
 
-  noob.closest_planet = temp;
+  //noob.closest_planet = temp;
 
   glutTimerFunc( 17, update, 0 );
   glutPostRedisplay();
@@ -430,6 +405,7 @@ void draw()
   }
 
   //draw the player
+  doCameraOffset();
   noob.draw();
 
   //glEnd();
@@ -459,6 +435,7 @@ void handleInput( unsigned char key, int x, int y )
   //cout << key << '\n'; //DEBUG
 
   //handles ASCII key input
+  /*
   if ( key == 'a' )
   {
     camera_position.x -= 0.4;
@@ -474,14 +451,44 @@ void handleInput( unsigned char key, int x, int y )
   if ( key == 's' )
   {
     camera_position.y -= 0.4;
-  }
-  if ( key == 'q' )
+  }*/
+  if ( key == 'w' )
   {
-    camera_position.z -= 0.1;
+    camera_position.z -= 0.15;
   }
-  if ( key == 'e' )
+  if ( key == 's' )
   {
-    camera_position.z += 0.1;
+    camera_position.z += 0.15;
+  }
+  if ( key == 'r' )
+  {
+    //KILL THE PLAYER! and respawn them.
+		noob.position.x = planets[noob.prev_planet].x;
+		noob.position.y = planets[noob.prev_planet].y;
+  }
+  if ( key == 'a' )
+  {
+    //rotate l
+    if ( noob.grounded )
+    {
+      //
+      float angle = atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) );
+      angle += 0.0628;
+      noob.position.x = planets[noob.closest_planet].x + planets[noob.closest_planet].radius * cos( angle );
+      noob.position.y = planets[noob.closest_planet].y + planets[noob.closest_planet].radius * sin( angle );
+    }
+  }
+  if ( key == 'd' )
+  {
+    //rotate r
+    if ( noob.grounded )
+    {
+      //
+      float angle = atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) );
+      angle -= 0.0628;
+      noob.position.x = planets[noob.closest_planet].x + planets[noob.closest_planet].radius * cos( angle );
+      noob.position.y = planets[noob.closest_planet].y + planets[noob.closest_planet].radius * sin( angle );
+    }
   }
   if ( key == 32 )
   {
@@ -489,11 +496,13 @@ void handleInput( unsigned char key, int x, int y )
     if ( noob.grounded )
     {
       //jump
-      noob.position.x += 0.1 * cos(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-      noob.position.y += 0.1 * sin(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-	  noob.velocity.x += 1.25 * cos(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-	  noob.velocity.y += 1.25 * sin(atan2((noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x)));
-	  noob.grounded = false;
+      noob.position.x += 0.10 * cos( atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) ) );
+      noob.position.y += 0.10 * sin( atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) ) );
+	    noob.velocity.x += 0.5 * cos( atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) ) );
+	    noob.velocity.y += 0.5 * sin( atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) ) );
+      noob.acceleration.x += 1.0 * cos( atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) ) );
+      noob.acceleration.y += 1.0 * cos( atan2( (noob.position.y - planets[noob.closest_planet].y), (noob.position.x - planets[noob.closest_planet].x) ) );
+	    noob.grounded = false;
     }
   }
   if ( key == 27 ) //escape

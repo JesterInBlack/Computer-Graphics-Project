@@ -17,32 +17,30 @@ class Player
 public:
   Player()
   { 
-	position = Point3();
-	position.x = 17;
+	  position = Point3();
+	  position.x = 7.0;
     velocity = Point3();
-	acceleration = Point3();
-	force = Point3();
+	  acceleration = Point3();
 
-	for (int i = 0; i < 20; i++)
-	{
-		distances[i] = 0;
-	}
-	//velocity_x = 0;
-	//velocity_y = 0;
+    prev_planet = 1; //default respawn position.
+    closest_planet = 1; //default stick.
+
+	  for (int i = 0; i < 31; i++)
+	  {
+		  distances[i] = 0;
+	  }
   }; //constructor
 
   Point3 position;
   Point3 velocity;
   Point3 acceleration;
-  Point3 force;
 
   bool grounded;
-  void draw();
-  float distances[20];
-  int closest_planet;
-  void update(float deltaX, float deltaY);
-  //float velocity_x;
-  //float velocity_y;
+  float distances[31];
+  int closest_planet;  //index of planet you're attached to.
+  int prev_planet;     //index of previous planet.
 
+  void draw();
+  void update();
 private:
 };
